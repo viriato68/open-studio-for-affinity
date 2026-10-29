@@ -1,0 +1,235 @@
+{
+  "2": {
+    "inputs": {
+      "text": "Change the color of the man's hoodie to red. Keep his face, expression, pose, background and lighting exactly the same.",
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "2 · ESCRIBE EL CAMBIO (en inglés)"
+    }
+  },
+  "3": {
+    "inputs": {
+      "unet_name": "flux1-kontext-dev-Q4_K_M.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {
+      "title": "Modelo Kontext"
+    }
+  },
+  "4": {
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "t5xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "flux",
+      "device": "default"
+    },
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "Textos"
+    }
+  },
+  "5": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "VAE Flux.1"
+    }
+  },
+  "6": {
+    "inputs": {
+      "image": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "FluxKontextImageScale",
+    "_meta": {
+      "title": "FluxKontextImageScale"
+    }
+  },
+  "7": {
+    "inputs": {
+      "pixels": [
+        "6",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "8": {
+    "inputs": {
+      "conditioning": [
+        "2",
+        0
+      ],
+      "latent": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "Set Reference Latent"
+    }
+  },
+  "9": {
+    "inputs": {
+      "guidance": 2.5,
+      "conditioning": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "FluxGuidance",
+    "_meta": {
+      "title": "FluxGuidance"
+    }
+  },
+  "10": {
+    "inputs": {
+      "conditioning": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "Conditioning Zero Out"
+    }
+  },
+  "11": {
+    "inputs": {
+      "seed": 42,
+      "steps": 20,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "9",
+        0
+      ],
+      "negative": [
+        "10",
+        0
+      ],
+      "latent_image": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "3 · EDITAR (seed aleatoria)"
+    }
+  },
+  "12": {
+    "inputs": {
+      "samples": [
+        "11",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "13": {
+    "inputs": {
+      "filename_prefix": "Editada",
+      "images": [
+        "12",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "4 · RESULTADO (~1 MP)"
+    }
+  },
+  "14": {
+    "inputs": {
+      "model_name": "4x-UltraSharp.pth"
+    },
+    "class_type": "UpscaleModelLoader",
+    "_meta": {
+      "title": "Modelo de escalado"
+    }
+  },
+  "15": {
+    "inputs": {
+      "upscale_model": [
+        "14",
+        0
+      ],
+      "image": [
+        "12",
+        0
+      ]
+    },
+    "class_type": "ImageUpscaleWithModel",
+    "_meta": {
+      "title": "Ampliar x4"
+    }
+  },
+  "16": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "scale_by": 0.75,
+      "image": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "ImageScaleBy",
+    "_meta": {
+      "title": "Ajustar (x0.75)"
+    }
+  },
+  "18": {
+    "inputs": {
+      "lado_maximo": 1024
+    },
+    "class_type": "AffinityCogerImagen",
+    "_meta": {
+      "title": "Affinity: Coger imagen"
+    }
+  },
+  "19": {
+    "inputs": {
+      "nombre_capa": "ComfyUI",
+      "ajustar_al_documento": true,
+      "imagen": [
+        "12",
+        0
+      ]
+    },
+    "class_type": "AffinityEnviarImagen",
+    "_meta": {
+      "title": "Affinity: Enviar imagen"
+    }
+  }
+}

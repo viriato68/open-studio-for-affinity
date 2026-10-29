@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Studio for Affinity</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e8eaf0;
+    --muted: #8b92a3;
+    --accent: #7c6cff;
+    --accent-2: #4fd1c5;
+    --ok: #3ecf8e;
+    --err: #ff6b6b;
+    --warn: #f5b84a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: radial-gradient(1200px 600px at 50% -200px, #221d4a 0%, var(--bg) 60%);
+    color: var(--text);
+    font: 16px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex; justify-content: center; padding: 40px 16px;
+  }
+  main { width: 100%; max-width: 640px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; gap: 12px; }
+  h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+  h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .status { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .dot.off { background: var(--err); }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+  .mode {
+    background: var(--panel-2); border: 2px solid var(--line); border-radius: 14px;
+    color: var(--text); padding: 22px 16px; cursor: pointer; text-align: left;
+    font: inherit; transition: border-color .15s, transform .1s;
+  }
+  .mode:hover { border-color: #3d4455; }
+  .mode:active { transform: scale(.98); }
+  .mode.active { border-color: var(--accent); background: #221f3d; }
+  .mode .icon { font-size: 28px; line-height: 1; }
+  .mode .name { display: block; font-size: 22px; font-weight: 650; margin: 10px 0 4px; }
+  .mode .desc { display: block; font-size: 13px; color: var(--muted); }
+
+  label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+  textarea {
+    width: 100%; min-height: 96px; resize: vertical;
+    background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; font: inherit;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+
+  .generate {
+    width: 100%; margin-top: 16px; padding: 16px; border: 0; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(90deg, var(--accent), #5b8cff); color: white;
+    font: 600 18px/1 inherit; font-family: inherit;
+  }
+  .generate:disabled { opacity: .5; cursor: default; }
+  .hint { font-size: 13px; color: var(--muted); margin: 12px 2px 0; }
+  .hint b { color: var(--warn); font-weight: 600; }
+
+  .progress { margin-top: 22px; display: none; }
+  .progress.show { display: block; }
+  .stage { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; margin-bottom: 10px; }
+  .stage .time { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .bar { height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+  .bar > div {
+    height: 100%; width: 0; border-radius: 99px; transition: width .4s;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+  .progress.ok .stage .text { color: var(--ok); }
+  .progress.ok .bar > div { background: var(--ok); }
+  .progress.err .bar { display: none; }
+  .error { color: var(--err); }
+  .error-help { color: var(--text); font-weight: 400; margin: 6px 0 0; }
+  details { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  details pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 10px; border-radius: 8px; }
+
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 18px; }
+
+  @media (max-width: 480px) {
+    header { flex-direction: column; align-items: flex-start; }
+    .modes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Open Studio <span>for Affinity</span></h1>
+    <div class="status"><div class="dot" id="dot"></div><span id="comfy">Checking ComfyUI…</span></div>
+  </header>
+
+  <div class="card">
+    <div class="modes">
+      <button class="mode active" data-mode="edit">
+        <div class="icon">✏️</div>
+        <span class="name">Edit</span>
+        <span class="desc">Add, change or remove anything just by describing it</span>
+      </button>
+      <button class="mode" data-mode="expand">
+        <div class="icon">🪄</div>
+        <span class="name">Expand</span>
+        <span class="desc">Make your image wider or taller with AI</span>
+      </button>
+    </div>
+
+    <label for="prompt" id="prompt-label">What do you want to change?</label>
+    <textarea id="prompt" placeholder="e.g. Make the hoodie red. Keep everything else the same."></textarea>
+
+    <button class="generate" id="generate">Generate</button>
+    <p class="hint" id="hint"></p>
+
+    <div class="progress" id="progress">
+      <div class="stage"><span class="text" id="stage"></span><span class="time" id="time"></span></div>
+      <div class="bar"><div id="fill"></div></div>
+      <div id="error-box"></div>
+    </div>
+  </div>
+
+  <footer>Runs locally with ComfyUI · Ctrl + Enter to generate</footer>
+</main>
+
+<script>
+const MODES = {
+  edit: {
+    label: "What do you want to change?",
+    placeholder: "e.g. Make the hoodie red. Keep everything else the same.",
+    hint: "Edit takes about 2 minutes. Write the instruction in English.",
+  },
+  expand: {
+    label: "What should appear in the new space?",
+    placeholder: "e.g. pink neon lit wall, purple glow",
+    hint: "<b>Tip:</b> First enlarge the canvas in Affinity (Document → Resize Canvas). The new empty area will be filled to match your image.",
+  },
+};
+
+const $ = (id) => document.getElementById(id);
+let mode = "edit";
+let busy = false;
+let timer = null;
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".mode").forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
+  $("prompt-label").textContent = MODES[m].label;
+  $("prompt").placeholder = MODES[m].placeholder;
+  $("hint").innerHTML = MODES[m].hint;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function showProgress({ stage, percent = 0, state = "", error = "", help = "", detail = "" }) {
+  const box = $("progress");
+  box.className = "progress show " + state;
+  $("stage").textContent = error ? "" : stage;
+  $("fill").style.width = percent + "%";
+  if (error) {
+    $("error-box").innerHTML =
+      `<div class="stage error">${escapeHtml(error)}</div>` +
+      (help ? `<p class="error-help">${escapeHtml(help)}</p>` : "") +
+      (detail ? `<details><summary>More info</summary><pre>${escapeHtml(detail)}</pre></details>` : "");
+  } else {
+    $("error-box").innerHTML = "";
+  }
+}
+
+function formatTime(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+}
+
+function setBusy(b) {
+  busy = b;
+  $("generate").disabled = b;
+  $("generate").textContent = b ? "Working…" : "Generate";
+  document.querySelectorAll(".mode").forEach((btn) => (btn.disabled = b));
+}
+
+async function generate() {
+  if (busy) return;
+  const prompt = $("prompt").value.trim();
+  if (!prompt) {
+    showProgress({ state: "err", error: "Write a prompt first." });
+    $("prompt").focus();
+    return;
+  }
+  setBusy(true);
+  showProgress({ stage: "Starting…", percent: 0 });
+  $("time").textContent = "";
+  try {
+    const r = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode, prompt }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || "Couldn't start.");
+  } catch (e) {
+    setBusy(false);
+    showProgress({ state: "err", error: e.message.includes("fetch") ? "The Open Studio window was closed. Double-click the .bat file again." : e.message });
+    return;
+  }
+  const started = Date.now();
+  timer = setInterval(() => { $("time").textContent = formatTime((Date.now() - started) / 1000); }, 1000);
+  poll();
+}
+
+async function poll() {
+  let s;
+  try {
+    s = await (await fetch("/api/status")).json();
+  } catch {
+    finish();
+    showProgress({ state: "err", error: "Lost contact with the Open Studio window.", help: "Double-click the .bat file again." });
+    return;
+  }
+  if (s.error) {
+    finish();
+    showProgress({ state: "err", error: s.error, help: s.help || "", detail: s.detail || "" });
+  } else if (s.done) {
+    finish();
+    showProgress({ stage: s.stage, percent: 100, state: "ok" });
+  } else {
+    const text = s.stage === "AI working…" ? `AI working… ${s.percent}%` : s.stage;
+    showProgress({ stage: text, percent: s.percent });
+    setTimeout(poll, 600);
+  }
+}
+
+function finish() {
+  clearInterval(timer);
+  setBusy(false);
+  checkComfy();
+}
+
+async function checkComfy() {
+  let on = false;
+  try { on = (await (await fetch("/api/health")).json()).comfy; } catch {}
+  $("dot").className = "dot " + (on ? "on" : "off");
+  $("comfy").textContent = on ? "ComfyUI connected" : "ComfyUI not running";
+}
+
+document.querySelectorAll(".mode").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+$("generate").addEventListener("click", generate);
+$("prompt").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.ctrlKey) generate(); });
+setInterval(() => { if (!busy) checkComfy(); }, 5000);
+setMode("edit");
+checkComfy();
+</script>
+</body>
+</html>
