@@ -140,6 +140,12 @@ This is the exact prompt used for the Edit example in the gallery above.
 
 ---
 
+## Disclaimer
+
+Open Studio for Affinity is an independent, unofficial project. It is not affiliated with, endorsed by, or sponsored by Canva or Affinity. Affinity and Canva are trademarks of their respective owners.
+
+---
+
 ## Credits
 
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI), the engine that makes all of this possible.
